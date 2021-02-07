@@ -81,11 +81,11 @@ export = class CustomReporter extends Base {
       spinner.start(currentTestMessage);
 
     })
-    .on(EVENT_TEST_RETRY, (test: Mocha.Test) => {
+    .on(EVENT_TEST_RETRY, (test: Mocha.Test, error: Error) => {
 
       (<any>reporter).events.emit('clear');
 
-      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
+      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
 
       retries++;
 
@@ -103,25 +103,30 @@ export = class CustomReporter extends Base {
 
       (<any>reporter).events.emit('clear');
 
-      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
+      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
 
-      if ( error.showDiff ) {
+      // If not timeout error
+      if ( this.getTimeoutTag(error) === '' ) {
 
-        // Display diff
-        const diff = Base.generateDiff(error.actual, error.expected);
+        if ( error.showDiff ) {
 
-        if ( diff.includes('failed to generate Mocha diff') )
-          console.error('\n' + chalk.redBright('  ' + error.message.replace(/\n/g, '  \n')) + '\n');
-        else
-          console.log(diff.split('\n').map(line => line.substr(4)).join('\n'));
+          // Display diff
+          const diff = Base.generateDiff(error.actual, error.expected);
 
-        console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
+          if ( diff.includes('failed to generate Mocha diff') )
+            console.error('\n' + chalk.redBright('  ' + error.message.replace(/\n/g, '  \n')) + '\n');
+          else
+            console.log(diff.split('\n').map(line => line.substr(4)).join('\n'));
 
-      }
-      else {
+          console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
 
-        console.error('\n' + chalk.redBright('  '+ error.message.replace(/\n/g, '  \n')) + '\n');
-        console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
+        }
+        else {
+
+          console.error('\n' + chalk.redBright('  '+ error.message.replace(/\n/g, '  \n')) + '\n');
+          console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
+
+        }
 
       }
 
@@ -173,6 +178,16 @@ export = class CustomReporter extends Base {
     else tag += 'th';
 
     return chalk.yellow.bold(`(${tag} retry) `);
+
+  }
+
+  private getTimeoutTag(error: Error) {
+
+    const match = error.message.match(/^Timeout of \d+ms exceeded\..+/);
+
+    if ( ! match ) return '';
+
+    return chalk.cyanBright.bold(`(timeout) `);
 
   }
 

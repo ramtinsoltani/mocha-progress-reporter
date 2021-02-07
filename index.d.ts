@@ -21,6 +21,7 @@ declare const _default: {
     new (runner: Mocha.Runner): {
         getDurationColor(duration: number): chalk.Chalk;
         getRetryTag(retries: number): string;
+        getTimeoutTag(error: Error): string;
     };
 };
 export = _default;
