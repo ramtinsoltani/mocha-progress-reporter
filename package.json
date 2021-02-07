@@ -1,6 +1,6 @@
 {
   "name": "mocha-progress-reporter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Custom Mocha reporter with spinners and progress reporting ability",
   "main": "index.js",
   "scripts": {
