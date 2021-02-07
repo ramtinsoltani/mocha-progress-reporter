@@ -4,7 +4,7 @@
   "description": "Custom Mocha reporter with spinners and progress reporting ability",
   "main": "index.js",
   "scripts": {
-    "start": "node ./node_modules/typescript/bin/tsc --build",
+    "prepublishOnly": "node ./node_modules/typescript/bin/tsc --build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

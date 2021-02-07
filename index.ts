@@ -4,29 +4,17 @@ import ora from 'ora';
 import chalk from 'chalk';
 import Base from 'mocha/lib/reporters/base';
 
-const {
-  EVENT_RUN_BEGIN,
-  EVENT_RUN_END,
-  EVENT_TEST_BEGIN,
-  EVENT_TEST_PENDING,
-  EVENT_TEST_PASS,
-  EVENT_TEST_FAIL
-} = Mocha.Runner.constants;
-
 class ProgressReporter {
 
-  private events = new EventEmitter;
+  public events = new EventEmitter();
 
-  /** Send a progress message to the reporter for the current test. */
-  progress(message: string) { this.events.emit('message', message); }
+  /** Sends a progress message to the reporter for the current test. */
+  progress(message: string) { this.events.emit('progress', message); }
 
-  /** Clear the last progress message. */
+  /** Clears the last progress message. */
   clear() { this.events.emit('clear'); }
 
 }
-
-// Inject custom event emitter for sending progress messages to this reporter.
-(<any>global).reporter = new ProgressReporter();
 
 declare global {
   /**
@@ -35,7 +23,20 @@ declare global {
   * Use the event 'clear' to clear the last progress message.
   */
   const reporter: ProgressReporter;
+
 }
+
+const {
+  EVENT_RUN_BEGIN,
+  EVENT_RUN_END,
+  EVENT_TEST_BEGIN,
+  EVENT_TEST_PENDING,
+  EVENT_TEST_PASS,
+  EVENT_TEST_FAIL,
+  EVENT_TEST_RETRY
+} = Mocha.Runner.constants;
+
+(<any>global).reporter = new ProgressReporter();
 
 export = class CustomReporter extends Base {
 
@@ -46,8 +47,9 @@ export = class CustomReporter extends Base {
     const stats = runner.stats;
     const spinner = ora();
     let currentTestMessage: string = null;
+    let retries = 0;
 
-    (<any>reporter)
+    (<any>reporter).events
     .on('progress', (message: string) => {
 
       spinner.text = `${currentTestMessage}\n  ${chalk.dim(message)}`;
@@ -74,23 +76,16 @@ export = class CustomReporter extends Base {
     })
     .on(EVENT_TEST_BEGIN, test => {
 
-      currentTestMessage = `${chalk.bold(test.parent.title)} ${test.title} ${chalk.yellow.bold('(running)')}`;
+      currentTestMessage = `${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.yellow.bold('(running)')}`;
 
       spinner.start(currentTestMessage);
 
     })
-    .on(EVENT_TEST_PASS, test => {
+    .on(EVENT_TEST_RETRY, (test: Mocha.Test, error) => {
 
-      (<any>reporter).emit('clear');
+      (<any>reporter).events.emit('clear');
 
-      spinner.succeed(`${chalk.bold(test.parent.title)} ${test.title} ${chalk.greenBright.bold('(passed)')}`);
-
-    })
-    .on(EVENT_TEST_FAIL, (test, error) => {
-
-      (<any>reporter).emit('clear');
-
-      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${chalk.redBright.bold('(failed)')}`);
+      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
 
       if ( error.showDiff ) {
 
@@ -107,6 +102,41 @@ export = class CustomReporter extends Base {
 
       }
 
+      retries++;
+
+    })
+    .on(EVENT_TEST_PASS, test => {
+
+      (<any>reporter).events.emit('clear');
+
+      spinner.succeed(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.greenBright.bold('(passed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
+
+      retries = 0;
+
+    })
+    .on(EVENT_TEST_FAIL, (test, error) => {
+
+      (<any>reporter).events.emit('clear');
+
+      spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
+
+      if ( error.showDiff ) {
+
+        // Display diff
+        console.log(Base.generateDiff(error.actual, error.expected));
+
+        console.error(chalk.dim(error.stack));
+
+      }
+      else {
+
+        console.error(chalk.redBright(error.message));
+        console.error(chalk.dim(error.stack));
+
+      }
+
+      retries = 0;
+
     })
     .on(EVENT_TEST_PENDING, test => {
 
@@ -122,12 +152,37 @@ export = class CustomReporter extends Base {
 
       spinner.stopAndPersist({
         symbol: chalk.blueBright('i'),
-        text: `Tests have finished with ${chalk.greenBright.bold(`${stats.passes} passes`)}, ${chalk.redBright.bold(`${stats.failures} failures`)}, and ${chalk.dim.bold.white(`${stats.pending} skips`)} after ${chalk.yellow(`${stats.duration}ms`)}`
+        text: `Tests have finished with ${chalk.greenBright.bold(`${stats.passes} passes`)}, ${chalk.redBright.bold(`${stats.failures} failures`)}, and ${chalk.dim.bold.white(`${stats.pending} skips`)} after ${this.getDurationColor(stats.duration)(`${stats.duration}ms`)}`
       });
 
       console.log();
 
     });
+
+  }
+
+  private getDurationColor(duration: number) {
+
+    if ( duration < 500 ) return chalk.white;
+    if ( duration < 1000 ) return chalk.yellow;
+    if ( duration < 1500 ) return chalk.magenta;
+    return chalk.redBright;
+
+  }
+
+  private getRetryTag(retries: number) {
+
+    if ( ! retries ) return '';
+
+    let tag = retries + '';
+
+    if ( ['11', '12', '13'].includes(tag.substr(-2)) ) tag += 'th';
+    else if ( tag.substr(-1) === '1' ) tag += 'st';
+    else if ( tag.substr(-1) === '2') tag += 'nd';
+    else if ( tag.substr(-1) === '3' ) tag += 'rd';
+    else tag += 'th';
+
+    return chalk.yellow.bold(`(${tag} retry) `);
 
   }
 

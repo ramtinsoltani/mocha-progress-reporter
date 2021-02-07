@@ -1,9 +1,12 @@
+/// <reference types="node" />
 import Mocha from 'mocha';
+import { EventEmitter } from 'events';
+import chalk from 'chalk';
 declare class ProgressReporter {
-    private events;
-    /** Send a progress message to the reporter for the current test. */
+    events: EventEmitter;
+    /** Sends a progress message to the reporter for the current test. */
     progress(message: string): void;
-    /** Clear the last progress message. */
+    /** Clears the last progress message. */
     clear(): void;
 }
 declare global {
@@ -15,6 +18,9 @@ declare global {
     const reporter: ProgressReporter;
 }
 declare const _default: {
-    new (runner: Mocha.Runner): {};
+    new (runner: Mocha.Runner): {
+        getDurationColor(duration: number): chalk.Chalk;
+        getRetryTag(retries: number): string;
+    };
 };
 export = _default;
