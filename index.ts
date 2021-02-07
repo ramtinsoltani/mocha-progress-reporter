@@ -131,9 +131,9 @@ export = class CustomReporter extends Base {
 
     })
     .on('config', (options: Partial<ProgressReporterOptions>) => {
-console.log(options)
+
       this.config = Object.assign({}, this.config, options);
-console.log(this.config)
+
       chalk = this.config.colors ? new color.Instance() : new color.Instance({ level: 0 });
       this.spinner.color = this.config.colors ? 'cyan' : 'white';
 
