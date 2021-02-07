@@ -81,26 +81,11 @@ export = class CustomReporter extends Base {
       spinner.start(currentTestMessage);
 
     })
-    .on(EVENT_TEST_RETRY, (test: Mocha.Test, error) => {
+    .on(EVENT_TEST_RETRY, (test: Mocha.Test) => {
 
       (<any>reporter).events.emit('clear');
 
       spinner.fail(`${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag(retries)}${chalk.redBright.bold('(failed)')} ${this.getDurationColor(test.duration)(`(${test.duration}ms)`)}`);
-
-      if ( error.showDiff ) {
-
-        // Display diff
-        console.log(Base.generateDiff(error.actual, error.expected));
-
-        console.error(chalk.dim(error.stack));
-
-      }
-      else {
-
-        console.error(chalk.redBright(error.message));
-        console.error(chalk.dim(error.stack));
-
-      }
 
       retries++;
 
@@ -123,15 +108,20 @@ export = class CustomReporter extends Base {
       if ( error.showDiff ) {
 
         // Display diff
-        console.log(Base.generateDiff(error.actual, error.expected));
+        const diff = Base.generateDiff(error.actual, error.expected);
 
-        console.error(chalk.dim(error.stack));
+        if ( diff.includes('failed to generate Mocha diff') )
+          console.error('\n' + chalk.redBright('  ' + error.message.replace(/\n/g, '  \n')) + '\n');
+        else
+          console.log(diff.split('\n').map(line => line.substr(4)).join('\n'));
+
+        console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
 
       }
       else {
 
-        console.error(chalk.redBright(error.message));
-        console.error(chalk.dim(error.stack));
+        console.error('\n' + chalk.redBright('  '+ error.message.replace(/\n/g, '  \n')) + '\n');
+        console.error(chalk.dim('  ' + error.stack.replace(/\n/g, '  \n')));
 
       }
 
@@ -142,7 +132,7 @@ export = class CustomReporter extends Base {
 
       spinner.stopAndPersist({
         symbol: chalk.dim('-'),
-        text: chalk.dim(`${chalk.bold(test.parent.title)} ${test.title}`)
+        text: chalk.dim(`${chalk.bold(test.parent.title)} ${test.title} ${chalk.bold('(skipped)')}`)
       });
 
     })

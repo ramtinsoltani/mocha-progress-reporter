@@ -25,7 +25,7 @@ require('mocha-progress-reporter');
 ## Usage
 
 ```ts
-// In any spec file
+// In any spec file that is imported in main spec
 describe('Suite', function() {
 
   it('should pass this', function() {
@@ -41,6 +41,11 @@ describe('Suite', function() {
   });
 
 });
+```
+
+Running Mocha:
+```bash
+mocha ./main.spec --reporter mocha-progress-reporter
 ```
 
 ## API
