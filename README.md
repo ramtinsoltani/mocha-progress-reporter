@@ -10,16 +10,10 @@ Custom Mocha reporter with extra logging abilities. This reporter shows spinners
 npm install mocha-progress-reporter --save-dev
 ```
 
-ES6 import:
+TypeScript import (for typings only):
 ```ts
 // Globally available in all tests with one import in main spec
 import 'mocha-progress-reporter';
-```
-
-CommonJS import:
-```ts
-// Globally available in all tests with one import in main spec
-require('mocha-progress-reporter');
 ```
 
 ## Usage
@@ -31,6 +25,8 @@ import 'mocha-progress-reporter';
 
 reporter.config({ hooks: false });
 ```
+
+> **NOTE:** You can reconfigure the reporter mid-case or in hooks when needed. Using this can form a debug mode where logs are off globally but toggled on inside specific test cases for debugging.
 
 Use the reporter for progress and logs:
 ```ts
@@ -74,9 +70,9 @@ mocha ./main.spec --reporter mocha-progress-reporter
 The following methods are defined on the `reporter` object:
   - **.progress(message)** Sends a progress message to the reporter for the current test.
   - **.clear()** Clears the last progress message. This is automatically called at the end of every test case and therefore not manually used very often.
-  - **.log(message[, additionalMessages])** Logs a message without breaking the spinners.
-  - **.warn(message[, additionalMessages])** Logs a warning message without breaking the spinners.
-  - **.error(message[, additionalMessages])** Logs an error message without breaking the spinners.
+  - **.log(message[, ...additionalMessages])** Logs a message without breaking the spinners.
+  - **.warn(message[, ...additionalMessages])** Logs a warning message without breaking the spinners.
+  - **.error(message[, ...additionalMessages])** Logs an error message without breaking the spinners.
   - **.config(options)** Configures the reporter with the following options:
     - **hooks** When `true`, running hooks will be shown in the terminal. Default `true`.
     - **colors** When `false` all logs will be plain white. Default `true`.
