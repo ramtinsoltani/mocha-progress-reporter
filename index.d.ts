@@ -25,11 +25,7 @@ declare class ProgressReporter {
     config(options: Partial<ProgressReporterOptions>): void;
 }
 declare global {
-    /**
-    * An event emitter for sending progress messages during tests.
-    * Use the event 'progress' to send progress messages for the current running test.
-    * Use the event 'clear' to clear the last progress message.
-    */
+    /** The global instance for interacting with the progress reporter. */
     const reporter: ProgressReporter;
 }
 declare const _default: {
