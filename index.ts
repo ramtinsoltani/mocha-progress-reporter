@@ -180,7 +180,7 @@ export = class CustomReporter extends Base {
 
       this.testInProgress = true;
 
-      this.currentTestMessage = `${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag()}${chalk.yellow.bold('(running)')}`;
+      this.currentTestMessage = `${chalk.bold(test.parent.fullTitle())} ${test.title} ${this.getRetryTag()}${chalk.yellow.bold('(running)')}`;
 
       if ( this.logsRenderedLast ) console.log();
 
@@ -194,7 +194,7 @@ export = class CustomReporter extends Base {
       this.currentProgressMessage = null;
       this.rerender();
 
-      this.renderFinal('fail', `${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag()}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getTimeTag(test.duration)}`);
+      this.renderFinal('fail', `${chalk.bold(test.parent.fullTitle())} ${test.title} ${this.getRetryTag()}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getTimeTag(test.duration)}`);
 
       this.currentLogs = [];
       this.retries++;
@@ -206,7 +206,7 @@ export = class CustomReporter extends Base {
       this.currentProgressMessage = null;
       this.rerender();
 
-      this.renderFinal('success', `${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag()}${chalk.greenBright.bold('(passed)')} ${this.getTimeTag(test.duration)}`);
+      this.renderFinal('success', `${chalk.bold(test.parent.fullTitle())} ${test.title} ${this.getRetryTag()}${chalk.greenBright.bold('(passed)')} ${this.getTimeTag(test.duration)}`);
 
       this.currentLogs = [];
       this.retries = 0;
@@ -230,7 +230,7 @@ export = class CustomReporter extends Base {
       }
       else {
 
-        this.renderFinal('fail', `${chalk.bold(test.parent.title)} ${test.title} ${this.getRetryTag()}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getTimeTag(test.duration)}`);
+        this.renderFinal('fail', `${chalk.bold(test.parent.fullTitle())} ${test.title} ${this.getRetryTag()}${chalk.redBright.bold('(failed)')} ${this.getTimeoutTag(error)}${this.getTimeTag(test.duration)}`);
 
       }
 
@@ -244,7 +244,7 @@ export = class CustomReporter extends Base {
 
       this.spinner.stopAndPersist({
         symbol: chalk.dim('-'),
-        text: chalk.dim(`${chalk.bold(test.parent.title)} ${test.title} ${chalk.bold('(skipped)')}`)
+        text: chalk.dim(`${chalk.bold(test.parent.fullTitle())} ${test.title} ${chalk.bold('(skipped)')}`)
       });
 
     })
